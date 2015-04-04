@@ -66,9 +66,11 @@ public class DbDownTest
             @Override
             public void run()
             {
-                try (Connection c = ds.getConnection()) {
+                try  {
+                    Connection c = ds.getConnection();
                     LOGGER.info(ds.getClass().getSimpleName() + " got a connection.");
-                    try (Statement stmt = c.createStatement()) {
+                    try  {
+                        Statement stmt = c.createStatement();
                         LOGGER.debug(ds.getClass().getSimpleName() + " Statement " + System.identityHashCode(stmt));
                         stmt.setQueryTimeout(1);
                         resultSet = stmt.executeQuery("SELECT id FROM test");

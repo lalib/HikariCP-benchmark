@@ -36,75 +36,53 @@ import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 
 @State(Scope.Benchmark)
-public class BenchBase
-{
+public class BenchBase {
     protected static final int MIN_POOL_SIZE = 0;
 
-    @Param({ "hikari", "bone", "tomcat", "c3p0", "vibur" })
+    @Param({"hikari", "bone", "tomcat", "c3p0", "vibur"})
     public String pool;
 
-    @Param({ "32" })
+    @Param({"32"})
     public int maxPoolSize;
 
     public static volatile DataSource DS;
 
     @Setup
-    public void setup()
-    {
-        try
-        {
+    public void setup() {
+        try {
             Class.forName("com.zaxxer.hikari.benchmark.stubs.StubDriver");
-        }
-        catch (ClassNotFoundException e)
-        {
+        } catch (ClassNotFoundException e) {
             throw new RuntimeException(e);
         }
-
-        switch (pool)
-        {
-        case "hikari":
+        if (pool.equals("hikari")) {
             setupHikari();
-            break;
-        case "bone":
+        } else if (pool.equals("bone")) {
             setupBone();
-            break;
-        case "tomcat":
+        } else if (pool.equals("tomcat")) {
             setupTomcat();
-            break;
-        case "c3p0":
+        } else if (pool.equals("c3p0")) {
             setupC3P0();
-            break;
-        case "vibur":
+        } else if (pool.equals("vibur")) {
             setupVibur();
-            break;
         }
     }
 
     @TearDown
-    public void teardown()
-    {
-        switch (pool)
-        {
-        case "hikari":
+    public void teardown() {
+        if (pool.equals("hikari")) {
             ((HikariDataSource) DS).shutdown();
-            break;
-        case "bone":
+        } else if (pool.equals("bone")) {
             ((BoneCPDataSource) DS).close();
-            break;
-        case "tomcat":
+        } else if (pool.equals("tomcat")) {
             ((org.apache.tomcat.jdbc.pool.DataSource) DS).close();
-            break;
-        case "c3p0":
+        } else if (pool.equals("c3p0")) {
             ((ComboPooledDataSource) DS).close();
-            break;
-        case "vibur":
+        } else if (pool.equals("vibur")) {
             ((ViburDBCPDataSource) DS).terminate();
-            break;
         }
     }
 
-    protected void setupTomcat()
-    {
+    protected void setupTomcat() {
         PoolProperties props = new PoolProperties();
         props.setUrl("jdbc:stub");
         props.setDriverClassName("com.zaxxer.hikari.benchmark.stubs.StubDriver");
@@ -126,8 +104,7 @@ public class BenchBase
         DS = new org.apache.tomcat.jdbc.pool.DataSource(props);
     }
 
-    protected void setupBone()
-    {
+    protected void setupBone() {
         BoneCPConfig config = new BoneCPConfig();
         config.setAcquireIncrement(1);
         config.setMinConnectionsPerPartition(MIN_POOL_SIZE);
@@ -149,8 +126,7 @@ public class BenchBase
         DS = new BoneCPDataSource(config);
     }
 
-    protected void setupHikari()
-    {
+    protected void setupHikari() {
         HikariConfig config = new HikariConfig();
         config.setMinimumIdle(MIN_POOL_SIZE);
         config.setMaximumPoolSize(maxPoolSize);
@@ -163,13 +139,11 @@ public class BenchBase
         DS = new HikariDataSource(config);
     }
 
-    protected void setupC3P0()
-    {
-        try
-        {
+    protected void setupC3P0() {
+        try {
             ComboPooledDataSource cpds = new ComboPooledDataSource();
-            cpds.setDriverClass( "com.zaxxer.hikari.benchmark.stubs.StubDriver" );            
-            cpds.setJdbcUrl( "jdbc:stub" );
+            cpds.setDriverClass("com.zaxxer.hikari.benchmark.stubs.StubDriver");
+            cpds.setJdbcUrl("jdbc:stub");
             cpds.setAcquireIncrement(1);
             cpds.setInitialPoolSize(MIN_POOL_SIZE);
             cpds.setMinPoolSize(MIN_POOL_SIZE);
@@ -178,19 +152,16 @@ public class BenchBase
             cpds.setLoginTimeout(8);
             cpds.setTestConnectionOnCheckout(true);
             cpds.setPreferredTestQuery("VALUES 1");
-    
+
             DS = cpds;
-        }
-        catch (Exception e)
-        {
+        } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
 
-    private void setupVibur()
-    {
+    private void setupVibur() {
         ViburDBCPDataSource vibur = new ViburDBCPDataSource();
-        vibur.setJdbcUrl( "jdbc:stub" );
+        vibur.setJdbcUrl("jdbc:stub");
         vibur.setPoolInitialSize(MIN_POOL_SIZE);
         vibur.setPoolMaxSize(maxPoolSize);
         vibur.setTestConnectionQuery("VALUES 1");
